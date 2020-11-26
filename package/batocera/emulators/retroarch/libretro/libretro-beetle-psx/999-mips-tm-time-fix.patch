@@ -1,0 +1,18 @@
+--- a/libretro-common/rthreads/rthreads.c	2020-11-12 09:12:02.000000000 +0800
++++ b/libretro-common/rthreads/rthreads.c	2020-11-26 21:10:35.265088014 +0800
+@@ -876,11 +876,11 @@
+    now.tv_sec = tickms/1000;
+    now.tv_nsec = tickms * 1000;
+ #elif defined(__mips__) || defined(VITA) || defined(_3DS)
+-   struct timeval tm;
++   //struct timeval tm;
+ 
+-   gettimeofday(&tm, NULL);
+-   now.tv_sec = tm.tv_sec;
+-   now.tv_nsec = tm.tv_usec * 1000;
++   //gettimeofday(&tm, NULL);
++   //now.tv_sec = tm.tv_sec;
++   //now.tv_nsec = tm.tv_usec * 1000;
+ #elif defined(RETRO_WIN32_USE_PTHREADS)
+    _ftime64_s(&now);
+ #elif !defined(GEKKO)
