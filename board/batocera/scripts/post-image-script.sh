@@ -109,6 +109,11 @@ case "${BATOCERA_TARGET}" in
 	BATOCERA_POST_IMAGE_SCRIPT="${BOARD_DIR}/post-image-script-libretech-h5.sh"
 	;;
 
+	RG350)
+	BOARD_DIR="${BATO_DIR}/rg350"
+	BATOCERA_POST_IMAGE_SCRIPT="${BOARD_DIR}/post-image-script-rg350.sh"
+	;;
+
 	*)
 	echo "Outch. Unknown target ${BATOCERA_TARGET} (see copy-batocera-archives.sh)" >&2
 	bash

@@ -20,6 +20,12 @@ if BR2_PACKAGE_BATOCERA_TARGET_ROCKPRO64 || BR2_PACKAGE_BATOCERA_TARGET_ROCK960 
            Selected when a Rockchip platform is being built
 endif
 
+if BR2_PACKAGE_BATOCERA_TARGET_RG350
+   config BR2_PACKAGE_BATOCERA_TARGET_INGENIC_ANY
+        bool "any ingenic"
+        default y
+endif
+
 config BR2_PACKAGE_BATOCERA_CORES_EXPERIMENTAL
 bool "add experimental cores"
 
@@ -104,7 +110,8 @@ config BR2_PACKAGE_BATOCERA_SYSTEM
                                                             BR2_PACKAGE_BATOCERA_TARGET_ODROIDC4     || \
                                                             BR2_PACKAGE_BATOCERA_TARGET_TINKERBOARD  || \
                                                             BR2_PACKAGE_BATOCERA_TARGET_MIQI         || \
-                                                            BR2_PACKAGE_BATOCERA_TARGET_VIM3  
+                                                            BR2_PACKAGE_BATOCERA_TARGET_VIM3         || \
+                                                            BR2_PACKAGE_BATOCERA_TARGET_RG350  
                                                             # opengles for sdl2
 
     select BR2_PACKAGE_SDL2_KMSDRM                       if BR2_PACKAGE_BATOCERA_TARGET_ROCKPRO64    || \
@@ -120,7 +127,9 @@ config BR2_PACKAGE_BATOCERA_SYSTEM
                                                             BR2_PACKAGE_BATOCERA_TARGET_ODROIDC4     || \
                                                             BR2_PACKAGE_BATOCERA_TARGET_S905         || \
                                                             BR2_PACKAGE_BATOCERA_TARGET_S912         || \
-                                                            BR2_PACKAGE_BATOCERA_TARGET_LIBRETECH_H5
+                                                            BR2_PACKAGE_BATOCERA_TARGET_LIBRETECH_H5 || \
+                                                            BR2_PACKAGE_BATOCERA_TARGET_RG350
+
 
     select BR2_PACKAGE_LIBDRM                            if BR2_PACKAGE_BATOCERA_TARGET_ROCKPRO64    || \
                                                             BR2_PACKAGE_BATOCERA_TARGET_ROCK960      || \
@@ -182,12 +191,12 @@ config BR2_PACKAGE_BATOCERA_SYSTEM
     select BR2_PACKAGE_VULKAN_TOOLS	  		 if BR2_PACKAGE_BATOCERA_TARGET_X86_ANY
 
     # wireless drivers
-    select BR2_PACKAGE_RTL8821AU			 if !BR2_PACKAGE_BATOCERA_TARGET_RPI_ANY
-    select BR2_PACKAGE_RTL8821CE			 if !BR2_PACKAGE_BATOCERA_TARGET_RPI_ANY      && \
-							    !BR2_PACKAGE_BATOCERA_TARGET_ODROIDGOA    && \
-							    !BR2_PACKAGE_BATOCERA_TARGET_LIBRETECH_H5 && \
-   							    !BR2_PACKAGE_BATOCERA_TARGET_MIQI         && \
-							    !BR2_PACKAGE_BATOCERA_TARGET_TINKERBOARD
+    #select BR2_PACKAGE_RTL8821AU			 if !BR2_PACKAGE_BATOCERA_TARGET_RPI_ANY
+    #select BR2_PACKAGE_RTL8821CE			 if !BR2_PACKAGE_BATOCERA_TARGET_RPI_ANY      && \
+	#						    !BR2_PACKAGE_BATOCERA_TARGET_ODROIDGOA    && \
+	#						    !BR2_PACKAGE_BATOCERA_TARGET_LIBRETECH_H5 && \
+   	#						    !BR2_PACKAGE_BATOCERA_TARGET_MIQI         && \
+	#						    !BR2_PACKAGE_BATOCERA_TARGET_TINKERBOARD
 
     # xorg
     select BR2_PACKAGE_BATOCERA_XORG                     if BR2_PACKAGE_BATOCERA_TARGET_X86_ANY
@@ -302,6 +311,9 @@ config BR2_PACKAGE_BATOCERA_TARGET_VIM3
 
 config BR2_PACKAGE_BATOCERA_TARGET_LIBRETECH_H5
         bool "libretech_h5"
+
+config BR2_PACKAGE_BATOCERA_TARGET_RG350
+        bool "rg350"
 
 endchoice
 
@@ -768,4 +780,4 @@ config BR2_PACKAGE_BATOCERA_XORG
        select BR2_PACKAGE_MESA3D_VULKAN_DRIVER_AMD		if  BR2_PACKAGE_BATOCERA_TARGET_X86_ANY
        select BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_ETNAVIV		if !BR2_PACKAGE_BATOCERA_TARGET_X86_ANY
 
-### ### ###
+### ### ###
