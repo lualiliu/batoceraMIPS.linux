@@ -1,6 +1,0 @@
-config BR2_PACKAGE_LIBHUGETLBFS
-	bool "libhugetlbfs"
-	help
-	  Library for easy use of Linux hugetlbfs (huge pages of RAM).
-
-	  https://github.com/libhugetlbfs/libhugetlbfs

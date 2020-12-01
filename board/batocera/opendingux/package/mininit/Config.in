@@ -1,6 +1,0 @@
-config BR2_PACKAGE_MININIT
-	bool "mininit"
-	help
-	  Initial Linux process that performs a loopback mount of the actual rootfs
-
-	  https://github.com/OpenDingux/mininit

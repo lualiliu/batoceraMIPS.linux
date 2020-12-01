@@ -1,1 +1,0 @@
-ACTION=="add", SUBSYSTEM=="tty", KERNEL=="tty[0-9]*", GROUP="tty", MODE="0660"
