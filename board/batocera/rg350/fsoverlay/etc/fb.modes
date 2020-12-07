@@ -1,0 +1,8 @@
+
+mode "320x240"
+    geometry 320 240 320 240 32
+    timings 0 0 0 0 0 0 0
+    accel true
+    rgba 8/16,8/8,8/0,0/0
+endmode
+

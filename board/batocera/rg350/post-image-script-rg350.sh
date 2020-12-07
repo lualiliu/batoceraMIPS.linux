@@ -41,10 +41,10 @@ cp -pr "${BINARIES_DIR}/tools"             "${BINARIES_DIR}/boot/"              
 
 
 # model select(rg350,rg350m,rg280m,rg280v,gcw0(no test))
-cat "${BINARIES_DIR}/boot/uzImage.bin.source" "${BINARIES_DIR}/boot/rg350.dtb" > "${BINARIES_DIR}/boot/uzImage.bin" || exit 1
+cat "${BINARIES_DIR}/boot/uzImage.bin.source" "${BINARIES_DIR}/boot/rg280v.dtb" > "${BINARIES_DIR}/boot/uzImage.bin" || exit 1
 # boot.tar.xz
-echo "creating boot.tar.xz"
-(cd "${BINARIES_DIR}/boot" && tar -I "xz -T0" -cf "${BATOCERA_BINARIES_DIR}/boot.tar.xz" batocera mininit-syspart batocera-boot.conf uzImage.bin tools gcw0_proto.dtb gcw0.dtb rg350.dtb rg350m.dtb rg280m.dtb rg280v.dtb proc dev root) || exit 1
+#echo "creating boot.tar.xz"
+#(cd "${BINARIES_DIR}/boot" && tar -I "xz -T0" -cf "${BATOCERA_BINARIES_DIR}/boot.tar.xz" batocera mininit-syspart batocera-boot.conf uzImage.bin tools gcw0_proto.dtb gcw0.dtb rg350.dtb rg350m.dtb rg280m.dtb rg280v.dtb proc dev root) || exit 1
 
 # batocera.img
 # rename the squashfs : the .update is the version that will be renamed at boot to replace the old version
