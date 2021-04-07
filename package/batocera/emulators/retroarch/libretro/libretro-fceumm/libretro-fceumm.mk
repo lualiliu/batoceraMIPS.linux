@@ -3,8 +3,8 @@
 # FCEUMM
 #
 ################################################################################
-# Version.: Commits on Nov 16, 2020
-LIBRETRO_FCEUMM_VERSION = f090d5a4473d6208506d62c1df8f48720f7db64b
+# Version.: Commits on Mar 25, 2021
+LIBRETRO_FCEUMM_VERSION = 66760e1a17342070ab876ec028aee273e9cb8236
 LIBRETRO_FCEUMM_SITE = $(call github,libretro,libretro-fceumm,$(LIBRETRO_FCEUMM_VERSION))
 LIBRETRO_FCEUMM_LICENSE = GPLv2
 
@@ -14,8 +14,14 @@ ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RPI3),y)
 	LIBRETRO_FCEUMM_PLATFORM = rpi3
 endif
 
-ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_ODROIDGOA),y)
-	LIBRETRO_FCEUMM_PLATFORM = classic_armv8_a35
+ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RPI4),y)
+LIBRETRO_FCEUMM_PLATFORM = rpi4
+else ifeq ($(BR2_aarch64),y)
+LIBRETRO_FCEUMM_PLATFORM = unix
+endif
+
+ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_S812),y)
+	LIBRETRO_FCEUMM_PLATFORM = armv
 endif
 
 define LIBRETRO_FCEUMM_BUILD_CMDS

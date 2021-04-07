@@ -24,6 +24,13 @@ ifeq ($(BR2_PACKAGE_DOLPHIN_EMU),y)
   BATOCERA_DESKTOPAPPS_ICONS   += dolphin.png
 endif
 
+# duckstation
+ifeq ($(BR2_PACKAGE_DUCKSTATION),y)
+  BATOCERA_DESKTOPAPPS_SCRIPTS += batocera-config-duckstation
+  BATOCERA_DESKTOPAPPS_APPS    += duckstation-config.desktop
+  BATOCERA_DESKTOPAPPS_ICONS   += duckstation.png
+endif
+
 # retroarch
 ifeq ($(BR2_PACKAGE_RETROARCH),y)
   BATOCERA_DESKTOPAPPS_SCRIPTS += batocera-config-retroarch
@@ -36,13 +43,6 @@ ifeq ($(BR2_PACKAGE_PPSSPP),y)
   BATOCERA_DESKTOPAPPS_SCRIPTS += batocera-config-ppsspp
   BATOCERA_DESKTOPAPPS_APPS    += ppsspp-config.desktop
   BATOCERA_DESKTOPAPPS_ICONS   += ppsspp.png
-endif
-
-# reicast
-ifeq ($(BR2_PACKAGE_REICAST),y)
-  BATOCERA_DESKTOPAPPS_SCRIPTS += batocera-config-reicast
-  BATOCERA_DESKTOPAPPS_APPS    += reicast-config.desktop
-  BATOCERA_DESKTOPAPPS_ICONS   += reicast.png
 endif
 
 # flycast
@@ -78,6 +78,13 @@ ifeq ($(BR2_PACKAGE_CEMU),y)
   BATOCERA_DESKTOPAPPS_SCRIPTS += batocera-config-cemu
   BATOCERA_DESKTOPAPPS_APPS    += cemu-config.desktop
   BATOCERA_DESKTOPAPPS_ICONS   += cemu.png
+endif
+
+# fpinball
+ifeq ($(BR2_PACKAGE_FPINBALL),y)
+  BATOCERA_DESKTOPAPPS_SCRIPTS += batocera-config-fpinball
+  BATOCERA_DESKTOPAPPS_APPS    += fpinball-config.desktop
+  BATOCERA_DESKTOPAPPS_ICONS   += fpinball.png
 endif
 
 define BATOCERA_DESKTOPAPPS_INSTALL_TARGET_CMDS

@@ -3,8 +3,8 @@
 # retroarch
 #
 ################################################################################
-# Version.: Commits on Aug 09, 2020
-RETROARCH_VERSION = v1.9.0
+# Version.: Release on Mar 29, 2021
+RETROARCH_VERSION = v1.9.1
 RETROARCH_SITE = $(call github,libretro,RetroArch,$(RETROARCH_VERSION))
 RETROARCH_LICENSE = GPLv3+
 RETROARCH_DEPENDENCIES = host-pkgconf dejavu retroarch-assets flac 
@@ -105,21 +105,15 @@ else
 	RETROARCH_CONF_OPTS += --disable-freetype
 endif
 
-define RETROARCH_MALI_FIXUP
-	# the type changed with the recent sdk
-	$(SED) 's|mali_native_window|fbdev_window|g' $(@D)/gfx/drivers_context/mali_fbdev_ctx.c
-endef
-
-ifeq ($(BR2_PACKAGE_MALI_OPENGLES_SDK)$(BR2_PACKAGE_LIBHYBRIS),y)
-	RETROARCH_PRE_CONFIGURE_HOOKS += RETROARCH_MALI_FIXUP
-	RETROARCH_CONF_OPTS += --enable-opengles --enable-mali_fbdev
-endif
-
 ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_ODROIDGOA),y)
 	RETROARCH_CONF_OPTS += --enable-odroidgo2
 	RETROARCH_DEPENDENCIES += librga
 endif
 
+ifeq ($(BR2_PACKAGE_HAS_LIBGL),y)
+	RETROARCH_CONF_OPTS += --enable-opengl --disable-opengles
+	RETROARCH_DEPENDENCIES += libgl
+endif
 
 ifeq ($(BR2_PACKAGE_XSERVER_XORG_SERVER),)
 	ifeq ($(BR2_PACKAGE_MESA3D_OPENGL_EGL),y)
@@ -177,6 +171,10 @@ ifeq ($(BR2_arm),y)
 		LIBRETRO_PLATFORM += armv7
 	endif
 
+	ifeq ($(BR2_cortex_a9),y)
+		LIBRETRO_PLATFORM += armv7
+	endif
+
 	ifeq ($(BR2_cortex_a15),y)
 		LIBRETRO_PLATFORM += armv7
 	endif
@@ -214,6 +212,10 @@ ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RPI4),y)
 	LIBRETRO_PLATFORM += rpi4
 endif
 
-ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_ODROIDGOA),y)
-	LIBRETRO_PLATFORM += classic_armv8_a35
+ifeq ($(BR2_aarch64),y)
+LIBRETRO_PLATFORM += arm64
+endif
+
+ifeq ($(BR2_cortex_a35)$(BR2_arm),yy)
+LIBRETRO_PLATFORM += classic_armv8_a35
 endif

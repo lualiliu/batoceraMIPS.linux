@@ -24,9 +24,8 @@ batoceraBins = {'dosbox'         : '/usr/bin/dosbox'
               , 'linapple'       : '/usr/bin/linapple'
               , 'moonlight'      : '/usr/bin/moonlight'
               , 'mupen64plus'    : '/usr/bin/mupen64plus'
-              , 'ppsspp'         : '/usr/bin/PPSSPPSDL'
-              , 'reicast'        : '/usr/bin/reicast.elf'
-              , 'flycast'        : '/usr/bin/flycast.elf'
+              , 'ppsspp'         : '/usr/bin/PPSSPP'
+              , 'flycast'        : '/usr/bin/flycast'
               , 'scummvm'        : '/usr/bin/scummvm'
               , 'vice'           : '/usr/bin/'
               , 'fsuae'          : '/usr/bin/fs-uae'
@@ -37,7 +36,10 @@ batoceraBins = {'dosbox'         : '/usr/bin/dosbox'
               , 'daphne'         : '/usr/bin/hypseus'
               , 'melonds'        : '/usr/bin/melonDS'
               , 'rpcs3'          : '/usr/bin/rpcs3'
-              , 'mame'           : '/usr/bin/mame/mamearcade64'
+              , 'hatari'         : '/usr/bin/hatari'
+              , 'supermodel'     : '/usr/bin/supermodel'
+              , 'tsugaru'        : '/usr/bin/Tsugaru_CUI'
+              , 'xemu'           : '/usr/bin/xemu'
 }
 
 
@@ -58,8 +60,6 @@ mupenSaves = SAVES + "/n64"
 mupenMappingUser    = mupenConf + 'input.xml'
 mupenMappingSystem  = '/usr/share/batocera/datainit/system/configs/mupen64/input.xml'
 
-kodiJoystick = HOME + '/.kodi/userdata/addon_data/peripheral.joystick/resources/buttonmaps/xml/linux/batocera_{}.xml'
-
 moonlightCustom = CONF+'/moonlight'
 moonlightConfigFile = moonlightCustom + '/moonlight.conf'
 moonlightGamelist = moonlightCustom + '/gamelist.txt'
@@ -68,15 +68,6 @@ moonlightMapping[1] = moonlightCustom + '/mappingP1.conf'
 moonlightMapping[2] = moonlightCustom + '/mappingP2.conf'
 moonlightMapping[3] = moonlightCustom + '/mappingP3.conf'
 moonlightMapping[4] = moonlightCustom + '/mappingP4.conf'
-
-reicastCustom = CONF + '/reicast'
-reicastMapping = reicastCustom + '/mappings'
-reicastConfig = reicastCustom + '/emu.cfg'
-reicastSaves = SAVES + '/dreamcast'
-reicastBios = BIOS
-reicastVMUBlank = '/usr/lib/python2.7/site-packages/configgen/datainit/dreamcast/vmu_save_blank.bin'
-reicastVMUA1 = reicastSaves + '/reicast/vmu_save_A1.bin'
-reicastVMUA2 = reicastSaves + '/reicast/vmu_save_A2.bin'
 
 dolphinConfig  = CONF + "/dolphin-emu"
 dolphinData    = SAVES + "/dolphin-emu"
@@ -112,6 +103,8 @@ fsuaeSaves = SAVES + "/amiga"
 
 scummvmSaves = SAVES + '/scummvm'
 
+solarusSaves = SAVES + '/solarus'
+
 viceConfig = CONF + "/vice"
 
 overlaySystem = "/usr/share/batocera/datainit/decorations"
@@ -132,14 +125,14 @@ daphneSaves = SAVES + '/daphne'
 linappleConfigFile = CONF + '/linapple/linapple.conf'
 linappleMasterDSKFile = CONF + '/linapple/Master.dsk'
 linapplaSaves = SAVES + '/apple2'
-linappleMasterDSK = '/usr/lib/python2.7/site-packages/configgen/datainit/linapple/Master.dsk'
+linappleMasterDSK = '/usr/lib/python3.9/site-packages/configgen/datainit/linapple/Master.dsk'
 
 flycastCustom = CONF + '/flycast'
 flycastMapping = flycastCustom + '/mappings'
 flycastConfig = flycastCustom + '/emu.cfg'
 flycastSaves = SAVES + '/dreamcast'
 flycastBios = BIOS
-flycastVMUBlank = '/usr/lib/python2.7/site-packages/configgen/datainit/dreamcast/vmu_save_blank.bin'
+flycastVMUBlank = '/usr/lib/python3.9/site-packages/configgen/datainit/dreamcast/vmu_save_blank.bin'
 flycastVMUA1 = flycastSaves + '/flycast/vmu_save_A1.bin'
 flycastVMUA2 = flycastSaves + '/flycast/vmu_save_A2.bin'
 
@@ -155,3 +148,8 @@ rpcs3CurrentConfig = CONF + '/rpcs3/GuiConfigs/CurrentSettings.ini'
 rpcs3config = CONF + '/rpcs3/config.yml'
 rpcs3configInput = CONF + '/rpcs3/config_input.yml'
 rpcs3configevdev = CONF + '/rpcs3/InputConfigs/Evdev/Default Profile.yml'
+
+supermodelCustom = CONF + '/supermodel'
+supermodelIni = supermodelCustom + '/Supermodel.ini'
+
+xemuConfig = CONF + '/xemu/xemu.ini'

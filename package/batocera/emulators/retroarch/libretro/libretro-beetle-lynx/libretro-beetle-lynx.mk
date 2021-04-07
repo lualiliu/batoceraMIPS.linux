@@ -3,8 +3,8 @@
 # BEETLE_LYNX
 #
 ################################################################################
-# Version.: Commits on Oct 19, 2019
-LIBRETRO_BEETLE_LYNX_VERSION = 559be1d83418b6309ce72db9c175c5bec6bcd549
+# Version.: Commits on Mar 24, 2021
+LIBRETRO_BEETLE_LYNX_VERSION = 26cb625d1f1c27137ce8069d155231f5a5c68bda
 LIBRETRO_BEETLE_LYNX_SITE = $(call github,libretro,beetle-lynx-libretro,$(LIBRETRO_BEETLE_LYNX_VERSION))
 LIBRETRO_BEETLE_LYNX_LICENSE = GPLv2
 
@@ -12,10 +12,6 @@ LIBRETRO_BEETLE_LYNX_PLATFORM = $(LIBRETRO_PLATFORM)
 
 ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RPI3),y)
 	LIBRETRO_BEETLE_LYNX_PLATFORM = rpi3
-endif
-
-ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_ODROIDGOA),y)
-	LIBRETRO_BEETLE_LYNX_PLATFORM = classic_armv8_a35
 endif
 
 define LIBRETRO_BEETLE_LYNX_BUILD_CMDS

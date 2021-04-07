@@ -19,11 +19,19 @@ class Emulator():
             eslog.log("no emulator defined. exiting.")
             raise Exception("No emulator found")
 
+        system_emulator = self.config["emulator"]
+        system_core     = self.config["core"]
+
         # load configuration from batocera.conf
         recalSettings = UnixSettings(batoceraFiles.batoceraConf)
         globalSettings = recalSettings.loadAll('global')
         systemSettings = recalSettings.loadAll(self.name)
         gameSettings = recalSettings.loadAll(self.name + "[\"" + os.path.basename(rom) + "\"]")
+
+        # add some other options
+        displaySettings = recalSettings.loadAll('display')
+        for opt in displaySettings:
+            self.config["display." + opt] = displaySettings[opt]
 
         # update config
         Emulator.updateConfiguration(self.config, globalSettings)
@@ -31,6 +39,14 @@ class Emulator():
         Emulator.updateConfiguration(self.config, gameSettings)
         self.updateFromESSettings()
         eslog.log("uimode: {}".format(self.config['uimode']))
+
+        # forced emulators ?
+        self.config["emulator-forced"] = False
+        self.config["core-forced"] = False
+        if "emulator" in globalSettings or "emulator" in systemSettings or "emulator" in gameSettings:
+            self.config["emulator-forced"] = True
+        if "core" in globalSettings or "core" in systemSettings or "core" in gameSettings:
+            self.config["core-forced"] = True
 
         # update renderconfig
         self.renderconfig = {}
@@ -60,7 +76,7 @@ class Emulator():
         :param merge_dct: dct merged into dct
         :return: None
         """
-        for k, v in merge_dct.iteritems():
+        for k, v in merge_dct.items():
             if (k in dct and isinstance(dct[k], dict) and isinstance(merge_dct[k], collections.Mapping)):
                 Emulator.dict_merge(dct[k], merge_dct[k])
             else:
@@ -68,11 +84,13 @@ class Emulator():
 
     @staticmethod
     def get_generic_config(system, defaultyml, defaultarchyml):
-        systems_default = yaml.load(file(defaultyml, "r"), Loader=yaml.FullLoader)
+        with open(defaultyml, 'r') as f:
+            systems_default = yaml.load(f, Loader=yaml.FullLoader)
 
         systems_default_arch = {}
         if os.path.exists(defaultarchyml):
-            systems_default_arch = yaml.load(file(defaultarchyml, "r"), Loader=yaml.FullLoader)
+            with open(defaultarchyml, 'r') as f:
+                systems_default_arch = yaml.load(f, Loader=yaml.FullLoader)
         dict_all = {}
 
         if "default" in systems_default:
@@ -108,13 +126,19 @@ class Emulator():
 
     def getOptBoolean(self, key):
         if key in self.config:
-            if unicode(self.config[key]) == u'1':
+            if self.config[key] == '1':
                 return True
-            if unicode(self.config[key]) == u'true':
+            if self.config[key] == 'true':
                 return True
             if self.config[key] == True:
                 return True
         return False
+
+    def getOptString(self, key):
+        if key in self.config:
+            if self.config[key]:
+                return self.config[key]
+        return ""
 
     @staticmethod
     def updateConfiguration(config, settings):

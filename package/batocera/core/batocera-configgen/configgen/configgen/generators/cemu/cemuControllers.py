@@ -7,7 +7,7 @@ from os import path
 import codecs
 from Emulator import Emulator
 from utils.logger import eslog
-import ConfigParser
+import configparser
 import json
 
 # Create the controller configuration file
@@ -49,42 +49,9 @@ def generateControllerConfig(system, playersControllers, rom):
 
     #We are exporting SDL_GAMECONTROLLERCONFIG in cemuGenerator, so we can assume all controllers are now working with xInput
     nplayer = 0
-    sdlstring = ''
-    double_pads = dict()
-
-    sdlMapping = {
-        'b':      'a',  'a':        'b',
-        'x':      'y',  'y':        'x',
-        'l2':     'lefttrigger',  'r2':    'righttrigger',
-        'l3':     'leftstick',  'r3':    'rightstick',
-        'pageup': 'leftshoulder', 'pagedown': 'rightshoulder',
-        'start':     'start',  'select':    'back',
-        'up': 'dpup', 'down': 'dpdown', 'left': 'dpleft', 'right': 'dpright',
-        'joystick1up': 'lefty', 'joystick1left': 'leftx',
-        'joystick2up': 'righty', 'joystick2left': 'rightx', 'hotkey': 'guide'
-    }
-
-
-
 
     for playercontroller, pad in sorted(playersControllers.items()):
-        #if nplayer == 0:  #For Future Hotkeys
-
-        if pad.configName not in double_pads:
-            double_pads[pad.configName] = 1
-            sdlstring=sdlstring + pad.guid + ',' + pad.configName
-            for x in pad.inputs:
-                input = pad.inputs[x]
-                keyname = None
-                if input.name in sdlMapping:
-                    keyname = sdlMapping[input.name]
-                if keyname is not None:
-                    sdlstring=sdlstring + write_key(keyname, input.type, input.id, input.value, pad.nbaxes, False, None)
-            sdlstring=sdlstring + ',platform:Linux,\n'
-
-
-
-        cemuSettings = ConfigParser.ConfigParser()
+        cemuSettings = configparser.ConfigParser(interpolation=None)
         cemuSettings.optionxform = str
 
         #Add Default Sections
@@ -94,7 +61,7 @@ def generateControllerConfig(system, playersControllers, rom):
             cemuSettings.add_section("Controller")
 
         cemuSettings.set("General", "api", "XInput")
-        cemuSettings.set("General", "controller", nplayer)
+        cemuSettings.set("General", "controller", str(nplayer))
 
         if (system.isOptSet('emulatedwiimotes') and system.getOptBoolean('emulatedwiimotes') == True):
             cemuSettings.set("General", "emulate", "Wiimote")
@@ -145,20 +112,21 @@ def generateControllerConfig(system, playersControllers, rom):
             cemuSettings.set("Controller", "8", "button_800000000")    # R2
             cemuSettings.set("Controller", "9", "button_40")    # Start
             cemuSettings.set("Controller", "10", "button_80")   # Select
-            cemuSettings.set("Controller", 11 + addIndex, "button_4000000")   # Up
-            cemuSettings.set("Controller", 12 + addIndex, "button_8000000")   # Down
-            cemuSettings.set("Controller", 13 + addIndex, "button_10000000")   # Left
-            cemuSettings.set("Controller", 14 + addIndex, "button_20000000")   # Right
-            cemuSettings.set("Controller", 15 + addIndex, "button_100")   # LStick Click
-            cemuSettings.set("Controller", 16 + addIndex, "button_200")   # RStick Click
-            cemuSettings.set("Controller", 17 + addIndex, "button_80000000")   # LStick Up
-            cemuSettings.set("Controller", 18 + addIndex, "button_2000000000")   # LStick Down
-            cemuSettings.set("Controller", 19 + addIndex, "button_1000000000")   # LStick Left
-            cemuSettings.set("Controller", 20 + addIndex, "button_40000000")   # LStick Right
-            cemuSettings.set("Controller", 21 + addIndex, "button_400000000")   # RStick Up
-            cemuSettings.set("Controller", 22 + addIndex, "button_10000000000")   # RStick Down
-            cemuSettings.set("Controller", 23 + addIndex, "button_8000000000")   # RStick Left
-            cemuSettings.set("Controller", 24 + addIndex, "button_200000000")   # RStick Right
+            cemuSettings.set("Controller", str(11 + addIndex), "button_4000000")   # Up
+            cemuSettings.set("Controller", str(12 + addIndex), "button_8000000")   # Down
+            cemuSettings.set("Controller", str(13 + addIndex), "button_10000000")   # Left
+            cemuSettings.set("Controller", str(14 + addIndex), "button_20000000")   # Right
+            cemuSettings.set("Controller", str(15 + addIndex), "button_100")   # LStick Click
+            cemuSettings.set("Controller", str(16 + addIndex), "button_200")   # RStick Click
+            cemuSettings.set("Controller", str(17 + addIndex), "button_80000000")   # LStick Up
+            cemuSettings.set("Controller", str(18 + addIndex), "button_2000000000")   # LStick Down
+            cemuSettings.set("Controller", str(19 + addIndex), "button_1000000000")   # LStick Left
+            cemuSettings.set("Controller", str(20 + addIndex), "button_40000000")   # LStick Right
+            cemuSettings.set("Controller", str(21 + addIndex), "button_400000000")   # RStick Up
+            cemuSettings.set("Controller", str(22 + addIndex), "button_10000000000")   # RStick Down
+            cemuSettings.set("Controller", str(23 + addIndex), "button_8000000000")   # RStick Left
+            cemuSettings.set("Controller", str(24 + addIndex), "button_200000000")   # RStick Right
+            cemuSettings.set("Controller", str(25 + addIndex), "button_100")   # Blow Mic
 
 
         configFileName = "{}/{}".format(batoceraFiles.CONF + "/cemu/controllerProfiles/", "controller" + str(nplayer) + ".txt")
@@ -167,16 +135,3 @@ def generateControllerConfig(system, playersControllers, rom):
             cemuSettings.write(configfile)
         nplayer+=1
 
-    return sdlstring
-
-def write_key(keyname, input_type, input_id, input_value, input_global_id, reverse, hotkey_id):
-    #Sample Output
-    #a:b1,b:b0,back:b10,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b2,leftshoulder:b6,leftstick:b13,lefttrigger:b8,leftx:a0,lefty:a1,rightshoulder:b7,rightstick:b14,righttrigger:b9,rightx:a2,righty:a3,start:b11,x:b4,y:b3
-    output = "," + keyname + ":"
-    if input_type == "button":
-        output = output + "b" + str(input_id)
-    elif input_type == "hat":
-        output = output + "h" + str(input_id) + "." + str(input_value)
-    elif input_type == "axis":
-        output = output + "a" + str(input_id)
-    return output

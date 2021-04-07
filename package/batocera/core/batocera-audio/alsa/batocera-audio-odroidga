@@ -1,33 +1,29 @@
-#!/bin/bash	
+#!/bin/sh
 
-ACTION=$1	
+ACTION="$1"
 
-case "${ACTION}" in	
-	"unlock-volume")
-		echo "obsolete"
-	;;	
+case "${ACTION}" in
+	list)
+		printf '%s\n' auto speakers headphone
+	;;
 
-	"list")	
-		echo "auto"	
-		echo "speakers"
-		echo "headphone"	
-	;;	
+	get)
+		/usr/bin/batocera-settings-get audio.device
+	;;
 
-	"get")	
-		batocera-settings -command load -key audio.device	
-	;;	
-
-	"set")	
-		MODE=$2	
-		case "${MODE}" in	
-			"auto"|"speakers")	
-				amixer cset name='Playback Path' SPK	
+	set)
+		MODE="$2"
+		case "${MODE}" in
+			auto | speakers)
+				sed -e "s;%CARDNO%;0;g" -e "s;%DEVICENO%;0;g" /usr/share/batocera/alsa/asoundrc-dmix+softvol > /userdata/system/.asoundrc
+				amixer cset name='Playback Path' SPK
 			;;
 
-			"headphone")	
-				amixer cset name='Playback Path' HP	
-			;;	
-		esac	
+			headphone)
+				sed -e "s;%CARDNO%;0;g" -e "s;%DEVICENO%;0;g" /usr/share/batocera/alsa/asoundrc-dmix+softvol > /userdata/system/.asoundrc
+				amixer cset name='Playback Path' HP
+			;;
+		esac
 	;;
 
 	test)

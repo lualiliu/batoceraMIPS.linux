@@ -3,8 +3,8 @@
 # ATARI800
 #
 ################################################################################
-# Version.: Commits on Nov 09, 2020
-LIBRETRO_ATARI800_VERSION = bda9478afca6b25a1c3899a31a934f1b17cdea40
+# Version.: Commits on Mar 16, 2021
+LIBRETRO_ATARI800_VERSION = 4cb766e053509c095b225fde19a2caf2b5d68b27
 LIBRETRO_ATARI800_SITE = $(call github,libretro,libretro-atari800,$(LIBRETRO_ATARI800_VERSION))
 LIBRETRO_ATARI800_LICENSE = GPL
 
@@ -12,10 +12,6 @@ LIBRETRO_ATARI800_PLATFORM = $(LIBRETRO_PLATFORM)
 
 ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RPI3),y)
 	LIBRETRO_ATARI800_PLATFORM = armv neon
-endif
-
-ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_ODROIDGOA),y)
-	LIBRETRO_ATARI800_PLATFORM = classic_armv8_a35
 endif
 
 define LIBRETRO_ATARI800_BUILD_CMDS

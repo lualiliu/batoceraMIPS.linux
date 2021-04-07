@@ -4,22 +4,18 @@
 #
 ################################################################################
 
-WINE_LUTRIS_VERSION = 5.7-11
-WINE_LUTRIS_SOURCE = lutris-$(WINE_LUTRIS_VERSION).tar.gz
-WINE_LUTRIS_SITE = https://github.com/lutris/wine/archive
+WINE_LUTRIS_VERSION = lutris-6.4
+WINE_LUTRIS_SITE = $(call github,lutris,wine,$(WINE_LUTRIS_VERSION))
 WINE_LUTRIS_LICENSE = LGPL-2.1+
-WINE_LUTRIS_LICENSE_FILES = COPYING.LIB LICENSE
 WINE_LUTRIS_DEPENDENCIES = host-bison host-flex host-wine-lutris
 HOST_WINE_LUTRIS_DEPENDENCIES = host-bison host-flex
 
-# cross packages version dependancy check
-# check dependancy with the mono version
-# otherwise, wine doesn't found it
-define WINE_LUTRIS_HOOK_CHECK_MONO
-	grep -E '^#define WINE_MONO_VERSION "'$(WINE_MONO_VERSION)'"$$' $(@D)/dlls/mscoree/mscoree_private.h
+# That create folder for install
+define WINE_LUTRIS_CREATE_WINE_FOLDER
+	mkdir -p $(TARGET_DIR)/usr/wine/lutris
 endef
 
-WINE_LUTRIS_PRE_CONFIGURE_HOOKS += WINE_LUTRIS_HOOK_CHECK_MONO
+WINE_LUTRIS_PRE_CONFIGURE_HOOKS += WINE_LUTRIS_CREATE_WINE_FOLDER
 
 # Wine needs its own directory structure and tools for cross compiling
 WINE_LUTRIS_CONF_OPTS = \
@@ -36,7 +32,9 @@ WINE_LUTRIS_CONF_OPTS = \
 	--without-opencl \
 	--without-oss \
 	--without-vkd3d \
-	--without-vulkan
+	--without-vulkan \
+	--prefix=/usr/wine/lutris \
+	--exec-prefix=/usr/wine/lutris
 
 # batocera
 ifeq ($(BR2_x86_64),y)
@@ -362,6 +360,13 @@ else
 WINE_LUTRIS_CONF_OPTS += --without-zlib
 endif
 
+# Cleanup final directory
+define WINE_LUTRIS_REMOVE_INCLUDES_HOOK
+        rm -Rf $(TARGET_DIR)/usr/wine/lutris/include
+endef
+
+WINE_LUTRIS_POST_INSTALL_TARGET_HOOKS += WINE_LUTRIS_REMOVE_INCLUDES_HOOK
+
 # host-gettext is essential for .po file support in host-wine wrc
 ifeq ($(BR2_SYSTEM_ENABLE_NLS),y)
 HOST_WINE_LUTRIS_DEPENDENCIES += host-gettext
@@ -378,14 +383,14 @@ endif
 # Wine only needs the host tools to be built, so cut-down the
 # build time by building just what we need.
 define HOST_WINE_LUTRIS_BUILD_CMDS
-	$(HOST_MAKE_ENV) $(MAKE) -C $(@D) \
-	  tools \
-	  tools/sfnt2fon \
-	  tools/widl \
-	  tools/winebuild \
-	  tools/winegcc \
-	  tools/wmc \
-	  tools/wrc
+	$(HOST_MAKE_ENV) $(MAKE) -C $(@D)
+	$(HOST_MAKE_ENV) $(MAKE) -C $(@D)/tools
+	$(HOST_MAKE_ENV) $(MAKE) -C $(@D)/tools/sfnt2fon
+	$(HOST_MAKE_ENV) $(MAKE) -C $(@D)/tools/widl
+	$(HOST_MAKE_ENV) $(MAKE) -C $(@D)/tools/winebuild
+	$(HOST_MAKE_ENV) $(MAKE) -C $(@D)/tools/winegcc
+	$(HOST_MAKE_ENV) $(MAKE) -C $(@D)/tools/wmc
+	$(HOST_MAKE_ENV) $(MAKE) -C $(@D)/tools/wrc
 endef
 
 # Wine only needs its host variant to be built, not that it is

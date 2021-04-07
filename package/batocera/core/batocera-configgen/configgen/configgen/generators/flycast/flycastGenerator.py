@@ -3,14 +3,14 @@ import Command
 #~ import flycastControllers
 import batoceraFiles
 from generators.Generator import Generator
-import flycastControllers
 import shutil
 import os.path
-import ConfigParser
+import configparser
 from shutil import copyfile
 from os.path import dirname
 from os.path import isdir
 from os.path import isfile
+from . import flycastControllers
 
 class FlycastGenerator(Generator):
 
@@ -18,7 +18,7 @@ class FlycastGenerator(Generator):
     # Configure fba and return a command
     def generate(self, system, rom, playersControllers, gameResolution):
         # Write emu.cfg to map joysticks, init with the default emu.cfg
-        Config = ConfigParser.ConfigParser()
+        Config = configparser.ConfigParser(interpolation=None)
         Config.optionxform = str
         if os.path.exists(batoceraFiles.flycastConfig):
             try:
@@ -30,7 +30,7 @@ class FlycastGenerator(Generator):
             Config.add_section("input")
         # For each pad detected
         for index in range(len(playersControllers), 4):
-            Config.set("input", 'evdev_device_id_' + str(index+1), -1)
+            Config.set("input", 'evdev_device_id_' + str(index+1), "-1")
             Config.set("input", 'evdev_mapping_' + str(index+1), "")
 
         for index in playersControllers:
@@ -51,7 +51,7 @@ class FlycastGenerator(Generator):
         if not Config.has_section("players"):
             Config.add_section("players")
         # number of players
-        Config.set("players", 'nb', len(playersControllers))
+        Config.set("players", 'nb', str(len(playersControllers)))
 
         if not Config.has_section("config"):
             Config.add_section("config")

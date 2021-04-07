@@ -1,0 +1,19 @@
+gamecube:
+  emulator: dolphin
+  core:     dolphin
+  options:
+    platform: drm
+n64:
+  emulator: libretro
+  core:     mupen64plus-next
+n64dd:
+  emulator: libretro
+  core:     mupen64plus-next
+nds:
+  emulator: libretro
+  core:     melonds
+wii:
+  emulator: dolphin
+  core:     dolphin
+  options:
+    platform: drm

@@ -3,8 +3,8 @@
 # POKEMINI
 #
 ################################################################################
-# Version.: Commits on Nov 16, 2020
-LIBRETRO_POKEMINI_VERSION = 158f061d441c2548abd12a1befe0dbfa976c0833
+# Version.: Commits on Mar 25, 2020
+LIBRETRO_POKEMINI_VERSION = 40092c4ea1f15fce877c0b942c4fe907b5f3b6ff
 LIBRETRO_POKEMINI_SITE = $(call github,libretro,PokeMini,$(LIBRETRO_POKEMINI_VERSION))
 LIBRETRO_POKEMINI_LICENSE = GPLv3
 
@@ -14,8 +14,14 @@ ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RPI3),y)
 	LIBRETRO_POKEMINI_PLATFORM = rpi3
 endif
 
-ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_ODROIDGOA),y)
-	LIBRETRO_POKEMINI_PLATFORM = classic_armv8_a35
+ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_S812),y)
+        LIBRETRO_POKEMINI_PLATFORM = armv
+endif
+
+ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RPI4),y)
+LIBRETRO_POKEMINI_PLATFORM = rpi4
+else ifeq ($(BR2_aarch64),y)
+LIBRETRO_POKEMINI_PLATFORM = unix
 endif
 
 define LIBRETRO_POKEMINI_BUILD_CMDS

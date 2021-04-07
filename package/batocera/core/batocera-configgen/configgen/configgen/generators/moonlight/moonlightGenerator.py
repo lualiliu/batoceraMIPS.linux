@@ -2,7 +2,7 @@
 import Command
 import controllersConfig
 import batoceraFiles
-import moonlightConfig
+from . import moonlightConfig
 from generators.Generator import Generator
 import shutil
 import os.path
@@ -18,7 +18,7 @@ class MoonlightGenerator(Generator):
     def generate(self, system, rom, playersControllers, gameResolution):
         moonlightConfig.generateMoonlightConfig()
         outputFile = batoceraFiles.moonlightCustom + '/gamecontrollerdb.txt'
-        configFile = controllersConfig.generateSDLGameDBAllControllers(playersControllers, outputFile)
+        configFile = controllersConfig.writeSDLGameDBAllControllers(playersControllers, outputFile)
         gameName,confFile = self.getRealGameNameAndConfigFile(rom)
         commandArray = [batoceraFiles.batoceraBins[system.config['emulator']], 'stream','-config',  confFile]
         commandArray.append('-app')
@@ -30,6 +30,7 @@ class MoonlightGenerator(Generator):
         romName = os.path.splitext(os.path.basename(rom))[0]
         # find the real game name
         f = open(batoceraFiles.moonlightGamelist, 'r')
+        gfeGame = None
         for line in f:
             try:
                 gfeRom, gfeGame, confFile = line.rstrip().split(';')

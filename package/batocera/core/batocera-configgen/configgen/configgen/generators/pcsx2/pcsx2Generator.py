@@ -2,21 +2,19 @@
 
 from generators.Generator import Generator
 import batoceraFiles
-import pcsx2Controllers
 import Command
 import os
 from settings.unixSettings import UnixSettings
 import re
-import ConfigParser
-import StringIO
+import configparser
 import io
+import controllersConfig
 
 class Pcsx2Generator(Generator):
 
     def generate(self, system, rom, playersControllers, gameResolution):
         isAVX2 = checkAvx2()
-        
-        pcsx2Controllers.generateControllerConfig(system, playersControllers, rom)
+        sseLib = checkSseLib(isAVX2)
 
         # config files
         configureReg(batoceraFiles.pcsx2ConfigDir)
@@ -44,23 +42,24 @@ class Pcsx2Generator(Generator):
         real_pluginsDir = batoceraFiles.pcsx2PluginsDir
         if isAVX2:
             real_pluginsDir = batoceraFiles.pcsx2Avx2PluginsDir
-        commandArray.append("--gs="   + real_pluginsDir + "/libGSdx.so")
-        commandArray.append("--pad="  + real_pluginsDir + "/libonepad-legacy.so")
-        commandArray.append("--cdvd=" + real_pluginsDir + "/libCDVDnull.so")
-        commandArray.append("--usb="  + real_pluginsDir + "/libUSBnull-0.7.0.so")
-        commandArray.append("--fw="   + real_pluginsDir + "/libFWnull-0.7.0.so")
-        commandArray.append("--dev9=" + real_pluginsDir + "/libdev9null-0.5.0.so")
-        commandArray.append("--spu2=" + real_pluginsDir + "/libspu2x-2.0.0.so")
+        commandArray.append("--gs="   + real_pluginsDir + "/" + sseLib)
         
         # arch
         arch = "x86"
         with open('/usr/share/batocera/batocera.arch', 'r') as content_file:
             arch = content_file.read()
 
+        env = {}
+        env["XDG_CONFIG_HOME"] = batoceraFiles.CONF
+        env["SDL_GAMECONTROLLERCONFIG"] = controllersConfig.generateSdlGameControllerConfig(playersControllers)
+
+        env["SDL_PADSORDERCONFIG"] = controllersConfig.generateSdlGameControllerPadsOrderConfig(playersControllers)
+
         if arch == "x86":
-            return Command.Command(array=commandArray, env={"XDG_CONFIG_HOME":batoceraFiles.CONF})
-        else:
-            return Command.Command(array=commandArray, env={"XDG_CONFIG_HOME":batoceraFiles.CONF, "LD_LIBRARY_PATH": "/lib32", "LIBGL_DRIVERS_PATH": "/lib32/dri"})
+            env["LD_LIBRARY_PATH"]    = "/lib32"
+            env["LIBGL_DRIVERS_PATH"] = "/lib32/dri"
+
+        return Command.Command(array=commandArray, env=env)
 
 def getGfxRatioFromConfig(config, gameResolution):
     # 2: 4:3 ; 1: 16:9
@@ -97,7 +96,7 @@ def configureVM(config_directory, system):
         f.close()
     
     # this file looks like a .ini
-    pcsx2VMConfig = ConfigParser.ConfigParser()
+    pcsx2VMConfig = configparser.ConfigParser(interpolation=None)
     # To prevent ConfigParser from converting to lower case
     pcsx2VMConfig.optionxform = str   
     
@@ -110,12 +109,30 @@ def configureVM(config_directory, system):
         pcsx2VMConfig.set("EmuCore/GS","VsyncQueueSize", "2")
         pcsx2VMConfig.set("EmuCore/GS","FrameLimitEnable", "1")
         pcsx2VMConfig.set("EmuCore/GS","SynchronousMTGS", "disabled")
-        pcsx2VMConfig.set("EmuCore/GS","FrameSkipEnable", "disabled")   
+        pcsx2VMConfig.set("EmuCore/GS","FrameSkipEnable", "disabled")
         pcsx2VMConfig.set("EmuCore/GS","LimitScalar", "1.00")
-        pcsx2VMConfig.set("EmuCore/GS","FramerateNTSC", "59.94")    
-        pcsx2VMConfig.set("EmuCore/GS","FrameratePAL", "50")   
+        pcsx2VMConfig.set("EmuCore/GS","FramerateNTSC", "59.94")
+        pcsx2VMConfig.set("EmuCore/GS","FrameratePAL", "50")
         pcsx2VMConfig.set("EmuCore/GS","FramesToDraw", "2")
-        pcsx2VMConfig.set("EmuCore/GS","FramesToSkip", "2")      
+        pcsx2VMConfig.set("EmuCore/GS","FramesToSkip", "2")
+
+    if not pcsx2VMConfig.has_section("EmuCore"):
+        pcsx2VMConfig.add_section("EmuCore")
+
+    # enable multitap
+    if system.isOptSet('multitap') and system.config['multitap'] != 'disabled':
+        if system.config['multitap'] == 'port1':
+            pcsx2VMConfig.set("EmuCore","MultitapPort0_Enabled", "enabled")
+            pcsx2VMConfig.set("EmuCore","MultitapPort1_Enabled", "disabled")
+        elif system.config['multitap'] == 'port2':
+            pcsx2VMConfig.set("EmuCore","MultitapPort0_Enabled", "disabled")
+            pcsx2VMConfig.set("EmuCore","MultitapPort1_Enabled", "enabled")
+        elif system.config['multitap'] == 'port12':
+            pcsx2VMConfig.set("EmuCore","MultitapPort0_Enabled", "enabled")
+            pcsx2VMConfig.set("EmuCore","MultitapPort1_Enabled", "enabled")
+    else:
+        pcsx2VMConfig.set("EmuCore","MultitapPort0_Enabled", "disabled")
+        pcsx2VMConfig.set("EmuCore","MultitapPort1_Enabled", "disabled")
 
     if system.isOptSet('vsync'):
         pcsx2VMConfig.set("EmuCore/GS","VsyncEnable", system.config["vsync"])
@@ -195,12 +212,12 @@ def configureUI(config_directory, bios_directory, system_config, gameResolution)
     resolution = getGfxRatioFromConfig(system_config, gameResolution)
 
     # this file looks like a .ini, but no, it miss the first section name...
-    iniConfig = ConfigParser.ConfigParser()
+    iniConfig = configparser.ConfigParser(interpolation=None)
     # To prevent ConfigParser from converting to lower case
     iniConfig.optionxform = str
     if os.path.exists(configFileName):
         try:
-            file = StringIO.StringIO()
+            file = io.StringIO()
             # fake an initial section, because pcsx2 doesn't put one
             file.write('[NO_SECTION]\n')
             file.write(io.open(configFileName, encoding='utf_8_sig').read())
@@ -257,3 +274,10 @@ def checkAvx2():
         if re.match("^flags[\t ]*:.* avx2", line):
             return True
     return False
+
+def checkSseLib(isAVX2):
+    if not isAVX2:
+        for line in open("/proc/cpuinfo").readlines():
+            if re.match("^flags[\t ]*:.* sse4_1", line) and re.match("^flags[\t ]*:.* sse4_2", line):
+                return "libGSdx-SSE4.so"
+    return "libGSdx.so"

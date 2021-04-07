@@ -3,15 +3,15 @@
 # CAP32
 #
 ################################################################################
-# Version.: Commits on Oct 07, 2020
-LIBRETRO_CAP32_VERSION = 4c470bb36b6bca00866d07c2036732ab85747a2a
+# Version.: Commits on Mar 27, 2021
+LIBRETRO_CAP32_VERSION = 408da091504dabe9678b25b7a6c3bbef0bc4c140
 LIBRETRO_CAP32_SITE = $(call github,libretro,libretro-cap32,$(LIBRETRO_CAP32_VERSION))
 LIBRETRO_CAP32_LICENSE = GPLv2
 
 LIBRETRO_CAP32_PLATFORM = $(LIBRETRO_PLATFORM)
 
-ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RPI3)$(BR2_PACKAGE_BATOCERA_TARGET_ODROIDGOA),y)
-	LIBRETRO_CAP32_PLATFORM = armv neon
+ifeq ($(BR2_cortex_a35)$(BR2_cortex_a53)$(BR2_arm),yy)
+LIBRETRO_CAP32_PLATFORM = armv neon
 endif
 
 define LIBRETRO_CAP32_BUILD_CMDS

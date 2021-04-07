@@ -4,26 +4,29 @@
 #
 ################################################################################
 
-BATOCERA_AUDIO_VERSION = 4.2
+BATOCERA_AUDIO_VERSION = 5
 BATOCERA_AUDIO_LICENSE = GPL
 BATOCERA_AUDIO_DEPENDENCIES = alsa-lib
 BATOCERA_AUDIO_SOURCE=
 BATOCERA_AUDIO_DEPENDENCIES += alsa-plugins
 
-ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RPI_ANY),y)
-ALSA_SUFFIX = "-rpi"
-else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_ODROIDGOA),y)
+ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_ODROIDGOA),y)
 ALSA_SUFFIX = "-odroidga"
-else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_ROCKPRO64),y)
-ALSA_SUFFIX = "-rockpro64"
-else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_VIM3),y)
-ALSA_SUFFIX = "-vim3"
+else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RK3399),y)
+ALSA_SUFFIX = "-rk3399"
+else ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_S922X),y)
+ALSA_SUFFIX = "-s922x"
 else
 ALSA_SUFFIX = 
 endif
 
 define BATOCERA_AUDIO_INSTALL_TARGET_CMDS
-	mkdir -p $(TARGET_DIR)/usr/lib/python2.7 $(TARGET_DIR)/usr/bin $(TARGET_DIR)/usr/share/sounds $(TARGET_DIR)/usr/share/batocera/alsa
+	mkdir -p $(TARGET_DIR)/usr/lib/python3.9 \
+		$(TARGET_DIR)/usr/bin \
+		$(TARGET_DIR)/usr/share/sounds \
+		$(TARGET_DIR)/usr/share/batocera/alsa \
+		$(TARGET_DIR)/etc/init.d \
+		$(TARGET_DIR)/etc/udev/rules.d
 	# default alsa configurations
 	cp $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/core/batocera-audio/alsa/asoundrc-* \
 		$(TARGET_DIR)/usr/share/batocera/alsa/

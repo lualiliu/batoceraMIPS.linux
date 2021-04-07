@@ -13,15 +13,15 @@ class Evmapy():
 
     @staticmethod
     def start(system, emulator, core, rom, playersControllers):
-	if Evmapy.__prepare(system, emulator, core, rom, playersControllers):
+        if Evmapy.__prepare(system, emulator, core, rom, playersControllers):
             Evmapy.__started = True
-	    subprocess.call(["batocera-evmapy", "start"])
+        subprocess.call(["batocera-evmapy", "start"])
 
     @staticmethod
     def stop():
         if Evmapy.__started:
             Evmapy.__started = False
-	    subprocess.call(["batocera-evmapy", "stop"])
+        subprocess.call(["batocera-evmapy", "stop"])
 
     @staticmethod
     def __prepare(system, emulator, core, rom, playersControllers):
@@ -33,7 +33,7 @@ class Evmapy():
                 #"/userdata/system/configs/evmapy/{}.{}.keys" .format (system, emulator),
                 "/userdata/system/configs/evmapy/{}.keys" .format (system),
                 #"/usr/share/evmapy/{}.{}.{}.keys" .format (system, emulator, core),
-                #"/usr/share/evmapy/{}.{}.keys" .format (system, emulator),
+                "/usr/share/evmapy/{}.{}.keys" .format (system, emulator),
                 "/usr/share/evmapy/{}.keys" .format (system)
         ]:
             if os.path.exists(keysfile) and not (os.path.isdir(rom) and keysfile == "{}.keys" .format (rom)): # "{}.keys" .format (rom) is forbidden for directories, it must be inside
@@ -105,11 +105,11 @@ class Evmapy():
                                 elif input.name == "up":
                                     axisId   = "BASE"
                                     axisName = "Y"
-                                    absbasey_positive =  input.value >= 0
+                                    absbasey_positive =  int(input.value) >= 0
                                 elif input.name == "left":
                                     axisId   = "BASE"
                                     axisName = "X"
-                                    absbasex_positive = input.value >= 0
+                                    absbasex_positive = int(input.value) >= 0
 
                                 if axisId in ["0", "1", "BASE"] and axisName in ["X", "Y"] and input.code is not None:
                                     axisMin, axisMax = Evmapy.__getPadMinMaxAxis(pad.dev, int(input.code))

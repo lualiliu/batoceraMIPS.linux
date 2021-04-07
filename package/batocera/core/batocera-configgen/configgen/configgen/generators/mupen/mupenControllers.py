@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os
-import ConfigParser
+import configparser
 from controllersConfig import Input
 from xml.dom import minidom
 
@@ -73,10 +73,10 @@ def defineControllerKeys(controller, systemconfig):
         # the input.xml adds 2 directions per joystick, ES handles just 1
         fakeSticks = { 'joystick2up' : 'joystick2down', 'joystick2left' : 'joystick2right'}
         # Cheat on the controller
-        for realStick, fakeStick in fakeSticks.iteritems():
+        for realStick, fakeStick in fakeSticks.items():
                 if realStick in controller.inputs:
                     if controller.inputs[realStick].type == "axis":
-                        print fakeStick + "-> " + realStick
+                        print(fakeStick + "-> " + realStick)
                         inputVar =  Input(fakeStick
                                         , controller.inputs[realStick].type
                                         , controller.inputs[realStick].id
@@ -133,13 +133,15 @@ def fillIniPlayer(nplayer, iniConfig, controller, config):
         if not iniConfig.has_section(section):
             iniConfig.add_section(section)
         iniConfig.set(section, 'Version', '2')
-        iniConfig.set(section, 'mode', 0)
-        iniConfig.set(section, 'device', controller.index)
-        iniConfig.set(section, 'name', controller.realName)
-        iniConfig.set(section, 'plugged', True)
-        iniConfig.set(section, 'plugin', 2)
-        iniConfig.set(section, 'AnalogDeadzone', config['AnalogDeadzone'])
-        iniConfig.set(section, 'AnalogPeak', config['AnalogPeak'])
+        iniConfig.set(section, 'mode', '0')
+        iniConfig.set(section, 'device', str(controller.index))
+        # TODO: python 3 remove hack to overcome ConfigParser limitation with utf8 in python 2.7
+        name_encode = controller.realName.encode("ascii", "ignore")
+        iniConfig.set(section, 'name', str(name_encode))
+        iniConfig.set(section, 'plugged', "True")
+        iniConfig.set(section, 'plugin', '2')
+        iniConfig.set(section, 'AnalogDeadzone', str(config['AnalogDeadzone']))
+        iniConfig.set(section, 'AnalogPeak', str(config['AnalogPeak']))
         iniConfig.set(section, 'mouse', "False")
 
         # set dynamic config - clear all keys then fill
@@ -175,5 +177,5 @@ def cleanPlayer(nplayer, iniConfig):
         if not iniConfig.has_section(section):
             iniConfig.add_section(section)
         iniConfig.set(section, 'Version', '2')
-        iniConfig.set(section, 'plugged', False)
+        iniConfig.set(section, 'plugged', "False")
 

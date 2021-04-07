@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import Command
-import libretroControllers
 import batoceraFiles
-import libretroConfig
-import libretroRetroarchCustom
+from . import libretroConfig
+from . import libretroRetroarchCustom
+from . import libretroControllers
 import shutil
 from generators.Generator import Generator
 import os.path
@@ -43,16 +43,27 @@ class LibretroGenerator(Generator):
         retroarchCore = batoceraFiles.retroarchCores + system.config['core'] + batoceraFiles.libretroExt
         romName = os.path.basename(rom)
 
-        # the command to run
+
+        # The command to run
         # For the NeoGeo CD (lr-fbneo) it is necessary to add the parameter: --subsystem neocd
         if system.name == 'neogeocd' and system.config['core'] == "fbneo":
             commandArray = [batoceraFiles.batoceraBins[system.config['emulator']], "-L", retroarchCore, "--subsystem", "neocd", "--config", system.config['configfile']]
+        # PURE zip games uses the same commandarray of all cores. .pc and .rom  uses owns
         elif system.name == 'dos':
-            commandArray = [batoceraFiles.batoceraBins[system.config['emulator']], "-L", retroarchCore, "--config", system.config['configfile'], rom + "/dosbox.bat"]
+            romDOSName = os.path.splitext(romName)[0]
+            romDOSName, romExtension = os.path.splitext(romName)
+            if romExtension == '.dos' or romExtension == '.pc':
+                if os.path.isfile(os.path.join(rom, romDOSName + ".bat")):
+                    commandArray = [batoceraFiles.batoceraBins[system.config['emulator']], "-L", retroarchCore, "--config", system.config['configfile'], os.path.join(rom, romDOSName + ".bat")]
+                else:
+                    commandArray = [batoceraFiles.batoceraBins[system.config['emulator']], "-L", retroarchCore, "--config", system.config['configfile'], rom + "/dosbox.bat"]
+            else:
+                commandArray = [batoceraFiles.batoceraBins[system.config['emulator']], "-L", retroarchCore, "--config", system.config['configfile']]
         else:
             commandArray = [batoceraFiles.batoceraBins[system.config['emulator']], "-L", retroarchCore, "--config", system.config['configfile']]
 
         configToAppend = []
+
 
         # Custom configs - per core
         customCfg = "{}/{}.cfg".format(batoceraFiles.retroarchRoot, system.name)
@@ -86,7 +97,7 @@ class LibretroGenerator(Generator):
         if configToAppend:
             commandArray.extend(["--appendconfig", "|".join(configToAppend)])
 
-         # Netplay mode
+        # Netplay mode
         if 'netplay.mode' in system.config:
             if system.config['netplay.mode'] == 'host':
                 commandArray.append("--host")
@@ -104,12 +115,13 @@ class LibretroGenerator(Generator):
         if system.name == 'daphne':
             romName = os.path.splitext(os.path.basename(rom))[0]
             rom = batoceraFiles.daphneDatadir + '/roms/' + romName +'.zip'
-        
-        if system.name == 'dos':
-            rom = 'set ROOT=' + rom
 
+        # The libretro core for EasyRPG requires to launch the RPG_RT.ldb file inside the .easyrpg folder
+        if system.name == 'easyrpg' and system.config['core'] == "easyrpg":
+            rom = rom + '/RPG_RT.ldb'
+        
         if system.name == 'scummvm':
-            rom = os.path.dirname(rom) + '/' + romName[1:-8]
+            rom = os.path.dirname(rom) + '/' + romName[0:-8]
         
         commandArray.append(rom)
         return Command.Command(array=commandArray)

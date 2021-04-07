@@ -8,18 +8,10 @@ import os
 from utils.logger import eslog
 from os import path
 from os import environ
-import ConfigParser
+import configparser
 import yaml
 import json
-import rpcs3Controllers
-
-from yaml.dumper import Dumper
-from yaml.representer import SafeRepresenter
-
-class KludgeDumper(Dumper):
-    pass
-KludgeDumper.add_representer(str, SafeRepresenter.represent_str)
-KludgeDumper.add_representer(unicode, SafeRepresenter.represent_unicode)
+from . import rpcs3Controllers
 
 class Rpcs3Generator(Generator):
 
@@ -33,7 +25,7 @@ class Rpcs3Generator(Generator):
             
         # Generates CurrentSettings.ini with values to disable prompts on first run
         
-        rpcsCurrentSettings = ConfigParser.ConfigParser()
+        rpcsCurrentSettings = configparser.ConfigParser(interpolation=None)
         # To prevent ConfigParser from converting to lower case
         rpcsCurrentSettings.optionxform = str
         if os.path.exists(batoceraFiles.rpcs3CurrentConfig):
@@ -54,12 +46,14 @@ class Rpcs3Generator(Generator):
             os.makedirs(os.path.dirname(batoceraFiles.rpcs3config))    
 
         # Generate a default config if it doesn't exist otherwise just open the existing
+        rpcs3ymlconfig = {}
         if os.path.isfile(batoceraFiles.rpcs3config):
             with open(batoceraFiles.rpcs3config, 'r') as stream:
                 rpcs3ymlconfig = yaml.load(stream)
-        else:
+
+        if rpcs3ymlconfig is None: # in case the file is empty
             rpcs3ymlconfig = {}
-            
+
         # Add Node Core
         if "Core" not in rpcs3ymlconfig:
             rpcs3ymlconfig["Core"] = {}
@@ -90,7 +84,7 @@ class Rpcs3Generator(Generator):
         else:
             rpcs3ymlconfig["Video"]['Renderer'] = 'OpenGL' # Vulkan
 
-        rpcs3ymlconfig["Audio"]['Renderer'] = 'ALSA'
+        rpcs3ymlconfig["Audio"]['Renderer'] = 'OpenAL' # ALSA does not support buffering so we have sound cuts ex: Rayman Origin
         rpcs3ymlconfig["Audio"]['Audio Channels'] = 'Downmix to Stereo'
         
         rpcs3ymlconfig["Miscellaneous"]['Exit RPCS3 when process finishes'] = True

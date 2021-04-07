@@ -1,15 +1,12 @@
-#!/bin/bash
-
-ACTION=$1
-shift
+#!/bin/sh
 
 do_help() {
-    echo "${1} scanlist" >&2
-    echo "${1} list" >&2
+    echo "$0 scanlist" >&2
+    echo "$0 list" >&2
 }
 
 do_list() {
-    connmanctl services | sed 's/^...[ ]*//' | awk -F '[ ]*[ ]wifi_[[:alnum:]]*_' '{if (NF==2) print $1}'
+    connmanctl services | sed 's/^...[ ]*//' | awk -F '[ ]*[ ]wifi_[[:alnum:]]*_' '{if (NF==2) print $1}' | sort -u # remove duplicates (a single wifi can appear under 2 interfaces)
 }
 
 do_scanlist() {
@@ -45,13 +42,22 @@ do_disable() {
 }
 
 do_start() {
-    settingsWlan="$(batocera-settings -command load -key wifi.enabled)"
+    settingsWlan="$(/usr/bin/batocera-settings-get wifi.enabled)"
     if [ "$settingsWlan" != "1" ];then
         return 0
     fi
     connmanctl enable wifi || return 1
     connmanctl scan   wifi || return 1
 }
+
+
+if [ $# -eq 0 ]; then
+	do_help
+	exit 1
+fi
+
+ACTION=$1
+shift
 
 case "${ACTION}" in
     "list")
@@ -71,7 +77,9 @@ case "${ACTION}" in
     "disable")
 	do_disable || exit 1
 	;;
-    *)
-	do_help "${0}"
+	*)
+		do_help
+		>&2 echo "error: invalid command ${ACTION}"
+		exit 1
 esac
 exit 0

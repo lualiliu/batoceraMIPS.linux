@@ -9,7 +9,11 @@
 
 BATOCERA_TARGET=$(grep -E "^BR2_PACKAGE_BATOCERA_TARGET_[A-Z_0-9]*=y$" "${BR2_CONFIG}" | sed -e s+'^BR2_PACKAGE_BATOCERA_TARGET_\([A-Z_0-9]*\)=y$'+'\1'+)
 
-sed -i "s|root:x:0:0:root:/root:/bin/bash|root:x:0:0:root:/userdata/system:/bin/sh|g" "${TARGET_DIR}/etc/passwd" || exit 1
+# For the root user:
+# 1. Use Bash instead of Dash for interactive use.
+# 2. Set home directory to /userdata/system instead of /root.
+sed -i "s|^root:x:.*$|root:x:0:0:root:/userdata/system:/bin/bash|g" "${TARGET_DIR}/etc/passwd" || exit 1
+
 rm -rf "${TARGET_DIR}/etc/dropbear" || exit 1
 ln -sf "/userdata/system/ssh" "${TARGET_DIR}/etc/dropbear" || exit 1
 
@@ -34,6 +38,9 @@ rm -f "${TARGET_DIR}/etc/init.d/S40xorg" || exit 1
 
 # remove the S10triggerhappy
 rm -f "${TARGET_DIR}/etc/init.d/S10triggerhappy" || exit 1
+
+# remove the S40bluetooth
+rm -f "${TARGET_DIR}/etc/init.d/S40bluetooth" || exit 1
 
 # we want an empty boot directory (grub installation copy some files in the target boot directory)
 rm -rf "${TARGET_DIR}/boot/grub" || exit 1
@@ -99,12 +106,13 @@ AUDIOGROUP=$(grep -E "^audio:" "${TARGET_DIR}/etc/group" | cut -d : -f 3)
 sed -i -e s+'defaults.pcm.ipc_gid .*$'+'defaults.pcm.ipc_gid '"${AUDIOGROUP}"+ "${TARGET_DIR}/usr/share/alsa/alsa.conf" || exit 1
 
 # bios file
+mkdir -p "${TARGET_DIR}/usr/share/batocera/datainit/bios" || exit 1
 python "${BR2_EXTERNAL_BATOCERA_PATH}/package/batocera/core/batocera-scripts/scripts/batocera-systems" --createReadme > "${TARGET_DIR}/usr/share/batocera/datainit/bios/readme.txt" || exit 1
 
 # enable serial console
-if ! [[ -z "${BR2_TARGET_GENERIC_GETTY_PORT}" ]]; then
-	SYSTEM_GETTY_PORT=$(grep "BR2_TARGET_GENERIC_GETTY_PORT" "${BR2_CONFIG}" | sed 's/.*\"\(.*\)\"/\1/')
-	SYSTEM_GETTY_BAUDRATE=$(grep -E "^BR2_TARGET_GENERIC_GETTY_BAUDRATE_[0-9]*=y$" "${BR2_CONFIG}" | sed -e s+'^BR2_TARGET_GENERIC_GETTY_BAUDRATE_\([0-9]*\)=y$'+'\1'+)
-sed -i -e '/# GENERIC_SERIAL$/s~^.*#~S0::respawn:/sbin/getty -L '${SYSTEM_GETTY_PORT}' '${SYSTEM_GETTY_BAUDRATE}' vt100 #~' \
-    ${TARGET_DIR}/etc/inittab
+SYSTEM_GETTY_PORT=$(grep "BR2_TARGET_GENERIC_GETTY_PORT" "${BR2_CONFIG}" | sed 's/.*\"\(.*\)\"/\1/')
+if ! [[ -z "${SYSTEM_GETTY_PORT}" ]]; then
+    SYSTEM_GETTY_BAUDRATE=$(grep -E "^BR2_TARGET_GENERIC_GETTY_BAUDRATE_[0-9]*=y$" "${BR2_CONFIG}" | sed -e s+'^BR2_TARGET_GENERIC_GETTY_BAUDRATE_\([0-9]*\)=y$'+'\1'+)
+    sed -i -e '/# GENERIC_SERIAL$/s~^.*#~S0::respawn:/sbin/getty -n -L -l /usr/bin/batocera-autologin '${SYSTEM_GETTY_PORT}' '${SYSTEM_GETTY_BAUDRATE}' vt100 #~' \
+        ${TARGET_DIR}/etc/inittab
 fi

@@ -15,6 +15,8 @@
 #v1.5 - add KINTARO for Kintaro/Roshambo cases
 #v1.6 - add ARGONONE for Rpi4 Argon One case fan control - @lbrpdx
 #v1.7 - add NESPI4 support - @lala
+#v1.8 - removed Witty-Pi (WiringPi package is not anymore!)
+#v1.9 - add POWERHAT for Rpi4 OneNineDesign case variants - @dmanlfc
 #by cyperghost 11.11.2019
 
 #dialog for selecting your switch or power device
@@ -24,7 +26,7 @@ function powerdevice_dialog()
     local switch cmd button #dialog variabels
     local currentswitch #show current switch
 
-    currentswitch=$(batocera-settings --command load --key system.power.switch)
+    currentswitch="$(/usr/bin/batocera-settings-get system.power.switch)"
     [[ -z $currentswitch || $currentswitch == "#" ]] && currentswitch="disabled"
 
     powerdevices=(
@@ -33,9 +35,9 @@ function powerdevice_dialog()
                   KINTARO "SNES style case from SuperKuma aka ROSHAMBO" \
                   MAUSBERRY "A neat power device from Mausberry circuits" \
                   ONOFFSHIM "The cheapest power device from Pimoroni" \
+                  POWERHAT "Another cheap power device from OneNineDesign" \
                   REMOTEPIBOARD_2003 "Any remote control as pswitch v2013" \
                   REMOTEPIBOARD_2005 "Any remote control as pswitch v2015" \
-                  WITTYPI "RTC and PowerBoost all in one board" \
                   ATX_RASPI_R2_6 "ATXRaspi is a smart power controller SBC" \
                   PIN56ONOFF "py: Sliding switch for proper shutdown" \
                   PIN56PUSH "py: Momentary push button for shutdown" \
@@ -183,6 +185,33 @@ function onoffshim_stop()
     echo "$1" > /sys/class/gpio/unexport
 }
 
+# https://www.raspberrypiplastics.com/power-hat-board
+# aka MultiComp Pro Raspberry Pi 4 case
+function powerhat_start()
+{
+    #Check if dtooverlay is setted in /boot/config.txt
+    #This is needed to do proper restarts/shutdowns  
+    # (GPIO18 default)
+    if ! grep -q "^dtoverlay=gpio-poweroff,gpiopin=$1,active_low=0" "/boot/config.txt"; then
+        mount -o remount,rw /boot
+        echo "" >> "/boot/config.txt"
+        echo "[powerhat]" >> "/boot/config.txt"
+        echo "dtoverlay=gpio-poweroff,gpiopin=$1,active_low=0" >> "/boot/config.txt"
+    fi
+
+    # This is Button command (GPIO17 default)
+    if ! grep -q "^dtoverlay=gpio-shutdown,gpiopin=$2,active_low=1,gpio_pull=up" "/boot/config.txt"; then
+        mount -o remount,rw /boot
+        echo "dtoverlay=gpio-shutdown,gpiopin=$2,active_low=1,gpio_pull=up" >> "/boot/config.txt"
+    fi
+}
+
+function powerhat_stop()
+{
+    # Do nothing to GPIO, handled by power hat
+    echo "had 'power hat' shutdown"
+}
+
 # http://www.msldigital.com/pages/support-for-remotepi-board-2013
 # http://www.msldigital.com/pages/support-for-remotepi-board-plus-2015
 function msldigital_start()
@@ -236,64 +265,6 @@ function msldigital_stop()
     for i in $*; do
         echo "$i" > /sys/class/gpio/unexport
     done
-}
-
-# http://www.uugear.com/witty-pi-realtime-clock-power-management-for-raspberry-pi/
-# https://github.com/uugear/Witty-Pi/blob/master/wittyPi/daemon.sh
-function wittyPi_start()
-{
-    # LED on GPIO-17 (wiringPi pin 0)
-    led_pin=$1
-
-    # halt by GPIO-4 (wiringPi pin 7)
-    halt_pin=$2
-
-    # make sure the halt pin is input with internal pull up
-    gpio mode $halt_pin up
-    gpio mode $halt_pin in
-
-    # delay until GPIO pin state gets stable
-    counter=0
-    while [ $counter -lt 10 ]; do  # increase this value if it needs more time
-        if [ $(gpio read $halt_pin) == '1' ] ; then
-            counter=$(($counter+1))
-        else
-            counter=0
-        fi
-        sleep 1
-    done
-
-    # wait for GPIO-4 (wiringPi pin 7) falling, or alarm B
-    while true; do
-        gpio wfi $halt_pin falling
-        sleep 0.05  # ignore short pull down (increase this value to ignore longer pull down)
-        if [ $(gpio read $halt_pin) == '0' ] ; then
-            break
-        fi
-    done
-
-    # Switch off
-    touch "/tmp/poweroff.please"
-    shutdown -h now
-}
-
-function wittyPi_stop()
-{
-    # LED on GPIO-17 (wiringPi pin 0)
-    led_pin=$1
-
-    # halt by GPIO-4 (wiringPi pin 7)
-    halt_pin=$2
-
-    # light the white LED
-    if [ -f "/tmp/shutdown.please" ] || [ -f "/tmp/poweroff.please" ]; then
-        gpio mode $led_pin out
-        gpio write $led_pin 1
-    fi
-
-    # restore GPIO-4
-    gpio mode $halt_pin in
-    gpio mode $halt_pin up
 }
 
 function pin356_start()
@@ -442,24 +413,19 @@ case "$CONFVALUE" in
     "ONOFFSHIM")
         onoffshim_$1 17 4
     ;;
+    "POWERHAT")
+        powerhat_$1 18 17
+    ;;
     "REMOTEPIBOARD_2003")
         msldigital_$1 22
     ;;
     "REMOTEPIBOARD_2005")
         msldigital_$1 14
     ;;
-    "WITTYPI")
-        wittyPi_$1 0 7
-    ;;
-    "PIN56ONOFF")
-        pin56_$1 onoff
-    ;;
-    "PIN56PUSH")
-        echo "will start pin56_$1"
-        pin56_$1 push
+    "PIN56PUSH"|"PIN56ONOFF")
+        pin56_$1
     ;;
     "PIN356ONOFFRESET")
-        echo "will start pin356_$1"
         pin356_$1 noparam
     ;;
     "RETROFLAG")
@@ -483,20 +449,20 @@ case "$CONFVALUE" in
 
         # Write values and display MsgBox
         [[ -n $switch ]] || { echo "Abort! Nothing changed...."; exit 1;}
-        batocera-settings --command write --key system.power.switch --value "$switch"
+        /usr/bin/batocera-settings-set system.power.switch "$switch"
         [[ $? -eq 0 ]] && info_msg="No error! Everything went okay!" || info_msg="An error occurred!"
         dialog --backtitle "BATOCERA Power Switch Selection Toolkit" \
                --title " STATUS OF NEW VALUE " \
-               --msgbox "${info_msg}\n\n$(batocera-settings status system.power.switch)" 0 0
+               --msgbox "${info_msg}\n\n$(/usr/bin/batocera-settings-get system.power.switch)" 0 0
     ;;
     --HELP|*)
         [[ $CONFVALUE == "--HELP" ]] || echo "Wrong argument given to 'start' or 'stop' parameter"
+        echo "Try: $(basename "$0") {start|stop} <value>"
         echo
-        echo "Try: rpi_gpioswitch.sh [start|stop] [value]"
+        echo -e -n "Valid values are:\t"
+        for i in $(seq 1 2 ${#powerdevices[@]}); do
+            echo -e -n "${powerdevices[i-1]}\n\t\t\t"
+        done
         echo
-        echo "Valid values are: REMOTEPIBOARD_2003, REMOTEPIBOARD_2005, WITTYPI 
-                  ATX_RASPI_R2_6, MAUSBERRY, ONOFFSHIM, RETROFLAG, RETROFLAG_GPI
-                  PIN56ONOFF, PIN56PUSH, PIN356ONOFFRESET, KINTARO, ARGONONE"
-        exit 1
     ;;
 esac

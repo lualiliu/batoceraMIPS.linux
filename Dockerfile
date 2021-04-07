@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:20.10
 ARG DEBIAN_FRONTEND=noninteractive
 RUN dpkg --add-architecture i386 && \
 	apt update && \
@@ -35,6 +35,8 @@ RUN dpkg --add-architecture i386 && \
 		locales \
 		graphviz \
 		python \
+		gcc-multilib \
+		g++-multilib \
 	&& apt clean
 
 # Set locale

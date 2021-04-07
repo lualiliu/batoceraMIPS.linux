@@ -4,14 +4,14 @@
 #
 ################################################################################
 
-# 2020 November, 1st release
-RPCS3_VERSION = v0.0.13
+# 2021 March, 1 release
+RPCS3_VERSION = v0.0.15
 
 RPCS3_SITE = https://github.com/RPCS3/rpcs3.git
 RPCS3_SITE_METHOD=git
 RPCS3_GIT_SUBMODULES=YES
 RPCS3_LICENSE = GPLv2
-RPCS3_DEPENDENCIES = qt5declarative libxml2 mesa3d libglu openal alsa-lib libevdev libglew libusb ffmpeg
+RPCS3_DEPENDENCIES = qt5declarative libxml2 mesa3d libglu openal alsa-lib libevdev libglew libusb ffmpeg faudio
 
 RPCS3_CONF_OPTS += -DUSE_PULSE=OFF
 RPCS3_CONF_OPTS += -DUSE_SYSTEM_FFMPEG=ON

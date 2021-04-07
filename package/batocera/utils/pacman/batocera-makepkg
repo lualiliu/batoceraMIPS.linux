@@ -5,12 +5,15 @@
 # 
 # 20200528 - Initial revision
 # 20201104 - Update groups, support mutiple archs
+# 20210113 - Update groups with Batocera v30
+# 20210322 - Switched to zstd (instead of xz)
 # 
 INFO=.PKGINFO
 BATOEXEC=.BATOEXEC
 BATOEXEC_PATH=./userdata/system/pacman/batoexec/
 COMMENT_CHAR_SEARCH="[#|;]"
 COMMENT_CHAR="#"
+FORCE=0
 
 ### These parameters need to be fulfilled:
 # pkgname = bezels-default-glazed
@@ -25,7 +28,7 @@ COMMENT_CHAR="#"
 # builddate = 1590539371 # epoch of creation
 
 ##### Valid "groups" for Batocera packages #####
-GRP_ARRAY=(game music theme bezel misc 3do 3ds amiga1200 amiga500 amigacd32 amigacdtv amstradcpc apple2 atari2600 atari5200 atari7800 atari800 atarist atomiswave c128 c20 c64 cannonball cavestory colecovision daphne dos dreamcast fbneo fds gameandwatch gamecube gamegear gb gb2players gba gbc gbc2players gx4000 hbmame imageviewer intellivision jaguar lightgun lutro lynx mame mastersystem megadrive moonlight mrboom msx1 msx2 msx2+ n64 naomi nds neogeo neogeocd nes ngp ngpc odyssey2 openbor pc88 pc98 pcengine pcenginecd pcfx pokemini pico8 ports prboom ps2 ps3 psp psx satellaview saturn scummvm sega32x segacd sg1000 snes sufami supergrafx thomson tic80 tyrquake vectrex virtualboy wii wiiu windows windows_installers wswan wswanc x68000 zx81 zxspectrum)
+GRP_ARRAY=(game music theme bezel misc 3do 3ds amiga1200 amiga500 amigacd32 amigacdtv amstradcpc apple2 atari2600 atari5200 atari7800 atari800 atarist atomiswave c128 c20 c64 cannonball cavestory channelf colecovision daphne devilutionx dos dreamcast easyrpg fbneo fds gamecube gameandwatch gamegear gb gb2players gba gbc gbc2players gx4000 hbmame intellivision jaguar lightgun lutro lynx mame mastersystem megadrive moonlight mrboom msx1 msx2 msx2+ n64 naomi nds neogeo neogeocd nes ngp ngpc o2em odyssey2 openbor pc88 pc98 pcengine pcenginecd pcfx pet pico8 pokemini ports prboom ps2 ps3 psp psx pygame satellaview saturn scummvm sdlpop sega32x segacd sg1000 snes solarus sufami supergrafx thomson tic80 tyrquake vectrex virtualboy wii wiiu windows windows_installers wswan wswanc x1 x68000 xash3d_fwgs zx81 zxspectrum)
 
 ##### Valid archs for Batocera packages #####
 ARCH_ARRAY=(any x86_64 x86 armv7l aarch64)
@@ -41,7 +44,7 @@ function get_config() {
 	val="$(grep -E -m1 "^\s*$1\s*=" $INFO)"
 	ret=$?
 	if [[ $ret -eq 1 ]]; then 
-		val="$(grep -E -m1 "^$COMMENT_CHAR_SEARCH\s*$1\s*=" $INFO)"
+		val="$(grep -E -m1 "^$COMMENT_CHAR_SEARCH\s*$1\s*=\s*" $INFO)"
 		ret=$?
 		[[ $ret -eq 0 ]] && val=$COMMENT_CHAR
 	else
@@ -78,10 +81,9 @@ function check_optional_argument() {
 	[[ "$val" == "$COMMENT_CHAR" ]] && write_argument "$vinput" "$default"
 }
 
-
 function set_config() {
 	# search for first key.name at beginning of line and write value to it
-	sed -i "1,/^\(\s*$1\s*=\).*/s^^\1 $2^" "$INFO"
+	sed -i "1,/^\(\s*$1\s*=\).*/s^^$1 = $2^" "$INFO"
 }
 
 function uncomment_config() {
@@ -100,28 +102,54 @@ function write_argument() {
 	elif [[ -z "$val" && $ret -eq 1 ]]; then
 		# add this new parameter
 		echo "$keyvalue = $newvalue" >> "$INFO"
-	elif [[ "$val" != "$newvalue" ]]; then
+	else
 		set_config "$keyvalue" "$newvalue"
 	fi
 }
 
 function sanitize_info() {
-	TMPFILE=$(mktemp)
-	sed -e 's/[[:blank:]]*$//' "$INFO" > "$TMPFILE"
-	mv -f "$TMPFILE" "$INFO"
+	# pacman needs a space before and after "="
+	sed -i 's/\([^ ]\)=/\1 =/;s/=\([^ ]\)/= \1/;s/[[:blank:]]*$//' "$INFO"
 }
 
 function make_pkg() {
-	pk=../"$1".pkg.tar.xz
+	pk=../"$1".pkg.tar.zst
+	[[ "$FORCE" -eq 1 ]] && rm -f "$pk"
 	[[ -f "$pk" ]] && echo "ERROR: file $pk already exists. Aborting." && exit 1
 	echo "Creating package $pk ..."
-	tar -cf - "$INFO" "$BATOEXEC" * | xz -c -z - > "$pk"
+	if [ -e "$BATOEXEC" ]; then
+	    tar -cf - "$INFO" "$BATOEXEC" * | zstd -c --rsyncable - -o "$pk"
+	else
+	    tar -cf - "$INFO" * | zstd -c --rsyncable - -o "$pk"
+	fi
 	ret=$?
 	[[ $ret -eq 0 ]] && echo "SUCCESS: package $pk correctly generated" && exit 0
 }
 
+function print_help() {
+cat << EOF
+batocera-makepkg: makes a pacman package for a Batocera system.
+usage:
+batocera-makepkg [-f] [-h] [PKGINFO_FILE]
+  -f : force overwrite output package
+  -h : describes available options
+  [PKGINFO_FILE] : if not provided, use .PKGINFO
+EOF
+exit
+}
+
 function main() {
 	    # New PKGINFO file passed as an argument
+	    while :; do
+		    case $1 in
+			    -h|--help) print_help
+				    ;;
+			    -f|--force) FORCE=1
+				    ;;
+			    *) break
+		    esac
+		    shift
+	    done
 	    CONFIGFILE="$1"
 	    [[ -f "$CONFIGFILE" ]] && cp "$CONFIGFILE" "$INFO"
 	    [[ -f "$INFO" ]] || { echo "ERROR: File not found: $INFO or no argument given." >&2; exit 1; }
@@ -150,5 +178,3 @@ function main() {
 
 # calling main function
 main "${@}"
-
-

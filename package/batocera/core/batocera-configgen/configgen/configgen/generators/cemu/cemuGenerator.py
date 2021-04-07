@@ -7,35 +7,65 @@ from os import path
 import batoceraFiles
 from xml.dom import minidom
 import codecs
-import cemuControllers
-from shutil import copyfile
+import controllersConfig
+import shutil
+import filecmp
+from . import cemuControllers
 
 class CemuGenerator(Generator):
 
     def generate(self, system, rom, playersControllers, gameResolution):
+        game_dir = "/userdata/system/configs/cemu/gameProfiles"
+        resources_dir = "/userdata/system/configs/cemu/resources"
+        cemu_exe = "/userdata/system/configs/cemu/Cemu.exe"
+        cemu_hook = "/userdata/system/configs/cemu/cemuhook.ini"
+        keystone_dll = "/userdata/system/configs/cemu/keystone.dll"
+        dbghelp_dll = "/userdata/system/configs/cemu/dbghelp.dll"
         if not path.isdir(batoceraFiles.BIOS + "/cemu"):
             os.mkdir(batoceraFiles.BIOS + "/cemu")
         if not path.isdir(batoceraFiles.CONF + "/cemu"):
             os.mkdir(batoceraFiles.CONF + "/cemu")
+        if not os.path.exists(game_dir):
+            shutil.copytree("/usr/cemu/gameProfiles", game_dir)
+        if not os.path.exists(resources_dir):
+            shutil.copytree("/usr/cemu/resources", resources_dir)
 
-        for folder in ["shaderCache", "controllerProfiles", "gameProfiles", "graphicPacks"]:
+        for folder in ["controllerProfiles", "graphicPacks"]:
             if not path.isdir(batoceraFiles.CONF + "/cemu/" + folder):
                 os.mkdir(batoceraFiles.CONF + "/cemu/" + folder)
 
         if not path.isdir(batoceraFiles.SAVES + "/cemu"):
             os.mkdir(batoceraFiles.SAVES + "/cemu")
 
-        CemuGenerator.CemuConfig(batoceraFiles.CONF + "/cemu/settings.xml")
+        CemuGenerator.CemuConfig(batoceraFiles.CONF + "/cemu/settings.xml", system)
         # copy the file from where cemu reads it
-        copyfile(batoceraFiles.CONF + "/cemu/settings.xml", "/usr/cemu/settings.xml")
-        
-        sdlstring = cemuControllers.generateControllerConfig(system, playersControllers, rom)
-        
-        commandArray = ["wine64", "/usr/cemu/Cemu.exe", "-g", "z:" + rom, "-m", "z:" + batoceraFiles.SAVES + "/cemu", "-f"]
-        return Command.Command(array=commandArray, env={"WINEPREFIX":batoceraFiles.SAVES + "/cemu", "vblank_mode":"0", "mesa_glthread":"true", "SDL_GAMECONTROLLERCONFIG":sdlstring})
+        shutil.copyfile("/userdata/bios/cemu/keys.txt", "/userdata/system/configs/cemu/keys.txt")
+        if not os.path.exists(cemu_exe) or not filecmp.cmp("/usr/cemu/Cemu.exe", cemu_exe):
+            shutil.copyfile("/usr/cemu/Cemu.exe", cemu_exe)
+        # copy cemuhook for secure upgrade
+        if not os.path.exists(cemu_hook) or not filecmp.cmp("/usr/cemu/cemuhook.ini", cemu_hook):
+            shutil.copyfile("/usr/cemu/cemuhook.ini", cemu_hook)
+        if not os.path.exists(keystone_dll) or not filecmp.cmp("/usr/cemu/keystone.dll", keystone_dll):
+            shutil.copyfile("/usr/cemu/keystone.dll", keystone_dll)
+        if not os.path.exists(dbghelp_dll) or not filecmp.cmp("/usr/cemu/dbghelp.dll", dbghelp_dll):
+            shutil.copyfile("/usr/cemu/dbghelp.dll", dbghelp_dll)
+
+        cemuControllers.generateControllerConfig(system, playersControllers, rom)
+
+        commandArray = ["/usr/wine/lutris/bin/wine64", "/userdata/system/configs/cemu/Cemu.exe", "-g", "z:" + rom, "-m", "z:" + batoceraFiles.SAVES + "/cemu", "-f"]
+        return Command.Command(
+            array=commandArray,
+            env={
+                "WINEPREFIX": batoceraFiles.SAVES + "/cemu",
+                "vblank_mode": "0",
+                "mesa_glthread": "true",
+                "SDL_GAMECONTROLLERCONFIG": controllersConfig.generateSdlGameControllerConfig(playersControllers),
+                "WINEDLLOVERRIDES": "mscoree=;mshtml=;dbghelp.dll=n,b",
+                "__GL_THREADED_OPTIMIZATIONS": "1"
+            })
 
     @staticmethod
-    def CemuConfig(configFile):
+    def CemuConfig(configFile, system):
         # config file
         config = minidom.Document()
         if os.path.exists(configFile):
@@ -65,14 +95,21 @@ class CemuGenerator(Generator):
         CemuGenerator.setSectionConfig(config, xml_root, "Audio", "")
         audio_root = CemuGenerator.getRoot(config, "Audio")
         CemuGenerator.setSectionConfig(config, audio_root, "TVDevice", "default")
-        CemuGenerator.setSectionConfig(config, audio_root, "TVVolume", "50")
+        CemuGenerator.setSectionConfig(config, audio_root, "TVVolume", "90")
         ##TVVolume
         #Graphic Settings
         
         CemuGenerator.setSectionConfig(config, xml_root, "Graphic", "")
         graphic_root = CemuGenerator.getRoot(config, "Graphic")
-        
-        graphic_root = CemuGenerator.getRoot(config, "Graphic")
+
+        if system.isOptSet("gfxbackend"):
+            if system.config["gfxbackend"] == "OpenGL":
+                CemuGenerator.setSectionConfig(config, graphic_root, "api", "0") #OpenGL
+            else:
+                CemuGenerator.setSectionConfig(config, graphic_root, "api", "1") #Vulkan
+        else:
+            CemuGenerator.setSectionConfig(config, graphic_root, "api", "0") #OpenGL
+
         
         
 

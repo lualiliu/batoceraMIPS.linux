@@ -3,7 +3,7 @@
 import batoceraFiles
 import os
 from Emulator import Emulator
-import ConfigParser
+import configparser
 
 def setViceConfig(viceConfigFile, system):
     
@@ -15,7 +15,7 @@ def setViceConfig(viceConfigFile, system):
             os.makedirs(os.path.dirname(viceConfigRC))
 
     # config file
-    viceConfig = ConfigParser.RawConfigParser()
+    viceConfig = configparser.RawConfigParser(interpolation=None)
     viceConfig.optionxform=str
     
     if os.path.exists(viceConfigRC):
@@ -31,6 +31,8 @@ def setViceConfig(viceConfigFile, system):
         systemCore = "SCPU64"    
     elif(system.config['core'] == 'xvic'):
        systemCore = "VIC20"    
+    elif(system.config['core'] == 'xpet'):
+       systemCore = "PET"    
     else:
         systemCore = "C128"
 
