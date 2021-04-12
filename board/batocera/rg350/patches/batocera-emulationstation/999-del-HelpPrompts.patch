@@ -1,0 +1,37 @@
+--- a/es-app/src/views/SystemView.cpp
++++ b/es-app/src/views/SystemView.cpp
+@@ -915,7 +915,7 @@
+ std::vector<HelpPrompt> SystemView::getHelpPrompts()
+ {
+ 	std::vector<HelpPrompt> prompts;
+-
++/*
+ 	if (mCarousel.type == VERTICAL || mCarousel.type == VERTICAL_WHEEL)
+ 		prompts.push_back(HelpPrompt("up/down", _("CHOOSE")));
+ 	else
+@@ -937,7 +937,7 @@
+ 		prompts.push_back(HelpPrompt("F1", _("FILES")));
+ 	}
+ #endif
+-
++*/
+ 	return prompts;
+ }
+--- a/es-app/src/views/ViewController.cpp	
++++ b/es-app/src/views/ViewController.cpp	
+@@ -1056,13 +1056,13 @@
+ 
+ std::vector<HelpPrompt> ViewController::getHelpPrompts()
+ {
+-	std::vector<HelpPrompt> prompts;
++	std::vector<HelpPrompt> prompts;/*
+ 	if(!mCurrentView)
+ 		return prompts;
+ 
+ 	prompts = mCurrentView->getHelpPrompts();
+ 	if(!UIModeController::getInstance()->isUIModeKid())
+-	  prompts.push_back(HelpPrompt("start", _("MENU"))); // batocera
++	  prompts.push_back(HelpPrompt("start", _("MENU"))); // batocera*/
+ 
+ 	return prompts;
+ }
